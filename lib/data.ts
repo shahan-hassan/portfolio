@@ -30,6 +30,9 @@ export interface StatItem {
   description: string;
 }
 
+export const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL || "https://shahanhassan.vercel.app";
+
 export const portfolioData = {
   personal: {
     name: "Shahan Hassan",
@@ -66,16 +69,16 @@ export const portfolioData = {
 
   stats: [
     {
-      value: "100+",
-      numeric: 100,
+      value: "20+",
+      numeric: 20,
       suffix: "+",
       label: "Delivered Projects",
       description: "Short-form reels, commercial cuts, motion graphics",
     },
     {
-      value: "10M+",
-      numeric: 10,
-      suffix: "M+",
+      value: "100K+",
+      numeric: 100,
+      suffix: "K+",
       label: "Digital Reach",
       description: "Organic views across Instagram Reels & creator channels",
     },

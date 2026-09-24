@@ -14,8 +14,11 @@ export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [activeSection, setActiveSection] = React.useState<string | null>(null);
 
+  const isProgrammaticScrollRef = React.useRef(false);
+  const scrollLockTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+
   const updateActiveSection = React.useCallback(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || isProgrammaticScrollRef.current) return;
 
     // If near bottom of the document, activate the contact section
     const scrollBottom = window.innerHeight + window.scrollY;
@@ -62,15 +65,87 @@ export function Navbar() {
     const handleResize = () => updateActiveSection();
     window.addEventListener("resize", handleResize);
     const frameId = requestAnimationFrame(updateActiveSection);
+
+    // If the user manually scrolls with wheel/touch, immediately release the programmatic scroll lock
+    const handleManualInterrupt = () => {
+      if (isProgrammaticScrollRef.current) {
+        isProgrammaticScrollRef.current = false;
+        if (scrollLockTimerRef.current) {
+          clearTimeout(scrollLockTimerRef.current);
+        }
+        updateActiveSection();
+      }
+    };
+
+    window.addEventListener("wheel", handleManualInterrupt, { passive: true });
+    window.addEventListener("touchmove", handleManualInterrupt, { passive: true });
+
     return () => {
       window.removeEventListener("resize", handleResize);
+      window.removeEventListener("wheel", handleManualInterrupt);
+      window.removeEventListener("touchmove", handleManualInterrupt);
       cancelAnimationFrame(frameId);
+      if (scrollLockTimerRef.current) {
+        clearTimeout(scrollLockTimerRef.current);
+      }
     };
   }, [updateActiveSection]);
 
-  const handleNavClick = (href: string) => {
+  const handleNavClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    href: string
+  ) => {
+    e.preventDefault();
     setActiveSection(href);
     setMobileMenuOpen(false);
+
+    const targetId = href.replace("#", "");
+    const targetEl = document.getElementById(targetId);
+
+    if (targetEl) {
+      isProgrammaticScrollRef.current = true;
+      if (scrollLockTimerRef.current) {
+        clearTimeout(scrollLockTimerRef.current);
+      }
+
+      // Smooth scroll directly to the section with proper header offset
+      const headerOffset = 80;
+      const elementPosition = targetEl.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.scrollY - headerOffset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth",
+      });
+
+      // Update URL hash cleanly without Next.js router scroll interference
+      window.history.pushState(null, "", href);
+
+      // Release the lock after smooth scroll animation completes
+      scrollLockTimerRef.current = setTimeout(() => {
+        isProgrammaticScrollRef.current = false;
+        updateActiveSection();
+      }, 850);
+    }
+  };
+
+  const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    setActiveSection(null);
+    setMobileMenuOpen(false);
+
+    isProgrammaticScrollRef.current = true;
+    if (scrollLockTimerRef.current) {
+      clearTimeout(scrollLockTimerRef.current);
+    }
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.history.pushState(null, "", "/");
+
+    scrollLockTimerRef.current = setTimeout(() => {
+      isProgrammaticScrollRef.current = false;
+      updateActiveSection();
+    }, 850);
   };
 
   return (
@@ -80,12 +155,13 @@ export function Navbar() {
         scrolled && "pt-3 sm:pt-4"
       )}
     >
-      <div className="max-w-[1280px] mx-auto flex items-center justify-between pointer-events-auto">
+      <div className="max-w-7xl mx-auto flex items-center justify-between pointer-events-auto">
 
         {/* Brand Lockup */}
         <Link
           href="/"
-          onClick={() => setActiveSection(null)}
+          scroll={false}
+          onClick={handleLogoClick}
           className="flex items-center gap-3 px-4 py-2 rounded-full bg-limestone border border-obsidian/10 transition-colors hover:border-ember/40"
           style={{ borderRadius: "800px" }}
         >
@@ -112,7 +188,8 @@ export function Navbar() {
               <Link
                 key={item.label}
                 href={item.href}
-                onClick={() => handleNavClick(item.href)}
+                scroll={false}
+                onClick={(e) => handleNavClick(e, item.href)}
                 className={cn(
                   "relative px-4 py-1.5 text-[13px] font-sans font-medium tracking-wide transition-colors",
                   isActive
@@ -204,7 +281,7 @@ export function Navbar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
-            className="md:hidden mt-2 p-3 rounded-[32px] border pointer-events-auto flex flex-col gap-1"
+            className="md:hidden mt-2 p-3 rounded-lg border pointer-events-auto flex flex-col gap-1"
             style={{
               background: "#f7f6f2",
               border: "1px solid rgba(7,6,7,0.1)",
@@ -216,7 +293,8 @@ export function Navbar() {
                 <Link
                   key={item.label}
                   href={item.href}
-                  onClick={() => handleNavClick(item.href)}
+                  scroll={false}
+                  onClick={(e) => handleNavClick(e, item.href)}
                   className={cn(
                     "flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-medium uppercase tracking-wider transition-colors",
                     isActive
