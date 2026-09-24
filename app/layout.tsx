@@ -66,6 +66,9 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  verification: {
+    google: "xVpfiaQxaPfJZndGEGrFuwVTYNTr0zvYYsj9CRLeFn8",
+  },
   openGraph: {
     title: `${portfolioData.personal.name} | ${portfolioData.personal.role}`,
     description: portfolioData.personal.tagline,
