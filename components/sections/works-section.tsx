@@ -5,11 +5,12 @@ import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import {
   Dialog,
   DialogContent,
+  DialogClose,
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
 import { portfolioData, type ProjectItem } from "@/lib/data";
-import { Play, Clock, ArrowUpRight, MessageCircle } from "lucide-react";
+import { Play, Clock, ArrowUpRight, MessageCircle, X } from "lucide-react";
 
 export function WorksSection() {
   const [activeCategory, setActiveCategory] = React.useState<string>("all");
@@ -22,7 +23,7 @@ export function WorksSection() {
 
   return (
     <section id="works" className="py-16 sm:py-24 px-4 sm:px-6 md:px-8">
-      <div className="max-w-[1280px] mx-auto flex flex-col gap-10 sm:gap-12">
+      <div className="max-w-7xl mx-auto flex flex-col gap-10 sm:gap-12">
 
         {/* Header + Filter Row */}
         <div
@@ -46,7 +47,7 @@ export function WorksSection() {
               border: "1px solid rgba(7,6,7,0.1)",
             }}
           >
-            <div className="flex items-center gap-1 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden px-1 py-0.5">
+            <div className="flex items-center gap-1 overflow-x-auto scrollbar-none [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden px-1 py-0.5">
               {portfolioData.categories.map((cat) => {
                 const isActive = activeCategory === cat.id;
                 return (
@@ -95,21 +96,27 @@ export function WorksSection() {
         >
           {selectedProject && (
             <DialogContent
-              className="w-[94vw] p-0 overflow-hidden flex flex-col transition-all duration-300"
+              showCloseButton={false}
+              className="p-0! gap-0! overflow-hidden flex flex-col transition-all duration-300 shadow-2xl"
               style={{
-                borderRadius: "36px",
+                display: "flex",
+                flexDirection: "column",
+                padding: 0,
+                gap: 0,
+                borderRadius: "28px",
                 background: "#f7f6f2",
                 border: "1px solid rgba(7,6,7,0.12)",
-                maxWidth: selectedProject.aspect === "portrait" ? "460px" : "960px",
+                maxWidth: selectedProject.aspect === "portrait" ? "min(460px, 95vw)" : "min(960px, 95vw)",
+                maxHeight: "90dvh",
+                height: "auto",
               }}
             >
-              {/* Video Player Area — Matches native video aspect ratio */}
+              {/* Video Player Area — Adapts responsively to mobile vs desktop screens */}
               <div
-                className={`relative w-full bg-black overflow-hidden flex items-center justify-center shrink-0 select-none ${
-                  selectedProject.aspect === "portrait"
-                    ? "aspect-[9/14] max-h-[65vh]"
-                    : "aspect-video max-h-[70vh]"
-                }`}
+                className={`relative w-full bg-black overflow-hidden flex items-center justify-center shrink-0 select-none ${selectedProject.aspect === "portrait"
+                    ? "aspect-9/14 max-h-[42dvh] sm:max-h-[58vh]"
+                    : "aspect-video max-h-[36dvh] sm:max-h-[62vh]"
+                  }`}
               >
                 {/* Ambient blur backdrop for portrait videos */}
                 {selectedProject.aspect === "portrait" && (
@@ -133,7 +140,7 @@ export function WorksSection() {
                 />
 
                 {/* Top overlay badges */}
-                <div className="absolute top-3.5 left-3.5 z-20 flex items-center gap-2">
+                <div className="absolute top-3.5 left-3.5 z-20 flex items-center gap-2 pointer-events-none">
                   <span
                     className="px-2.5 py-0.5 text-[10px] font-sans font-semibold uppercase tracking-wider text-obsidian shadow-sm"
                     style={{ background: "#f5f28e", borderRadius: "800px" }}
@@ -145,69 +152,104 @@ export function WorksSection() {
                     {selectedProject.duration}
                   </span>
                 </div>
+
+                {/* Floating Frosted Glass Close Button — High Contrast Top Right */}
+                <DialogClose
+                  render={
+                    <button
+                      type="button"
+                      className="absolute top-3 right-3 z-30 size-9 sm:size-10 flex items-center justify-center rounded-full bg-obsidian/80 hover:bg-obsidian text-chalk hover:text-ember backdrop-blur-md border border-chalk/20 shadow-2xl transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer focus:outline-none"
+                      aria-label="Close dialog"
+                    />
+                  }
+                >
+                  <X className="size-4 sm:size-5" />
+                </DialogClose>
               </div>
 
-              {/* Compact Cinema Details Strip (~22% of modal view) */}
-              <div className="p-4 sm:p-5 flex flex-col gap-2.5 overflow-y-auto">
-                {/* Header row: Title + Client/Year + Commission CTA */}
-                <div
-                  className="flex items-center justify-between gap-3 pb-2.5"
-                  style={{ borderBottom: "1px solid rgba(7,6,7,0.08)" }}
-                >
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-1.5 text-[10px] font-mono text-obsidian/50 uppercase tracking-wider">
-                      <span className="font-semibold text-obsidian/75">{selectedProject.client}</span>
-                      <span>·</span>
-                      <span>{selectedProject.year}</span>
+              {/* Scrollable Cinema Details Strip — Native momentum-enabled scroll container */}
+              <div
+                className="flex-1 min-h-0 w-full overflow-y-auto overscroll-contain scrollbar-thin [scrollbar-color:rgba(7,6,7,0.25)_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-obsidian/20"
+                style={{ WebkitOverflowScrolling: "touch" }}
+              >
+                <div className="p-4 sm:p-5 flex flex-col gap-2.5 sm:gap-3">
+                  {/* Header row: Title + Client/Year + Commission CTA + Close Button */}
+                  <div
+                    className="flex items-center justify-between gap-3 pb-2.5"
+                    style={{ borderBottom: "1px solid rgba(7,6,7,0.08)" }}
+                  >
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-1.5 text-[10px] font-mono text-obsidian/50 uppercase tracking-wider">
+                        <span className="font-semibold text-obsidian/75">{selectedProject.client}</span>
+                        <span>·</span>
+                        <span>{selectedProject.year}</span>
+                      </div>
+                      <DialogTitle className="font-heading text-lg sm:text-xl uppercase text-obsidian tracking-wide leading-tight mt-0.5">
+                        {selectedProject.title}
+                      </DialogTitle>
                     </div>
-                    <DialogTitle className="font-heading text-lg sm:text-xl uppercase text-obsidian tracking-wide leading-tight mt-0.5">
-                      {selectedProject.title}
-                    </DialogTitle>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <a
+                        href={`${portfolioData.socials.whatsapp}?text=Hi%20Shahan,%20I'd%20love%20a%20cut%20like%20"${encodeURIComponent(selectedProject.title)}"`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-1.5 px-3 sm:px-3.5 h-7 text-[10px] uppercase tracking-wider font-semibold text-obsidian bg-ember hover:bg-ember/90 active:scale-[0.98] transition-all"
+                        style={{ borderRadius: "800px" }}
+                      >
+                        <MessageCircle className="size-3" />
+                        <span>Commission</span>
+                      </a>
+
+                      {/* Bottom Close Button for easy one-hand mobile thumb access */}
+                      <DialogClose
+                        render={
+                          <button
+                            type="button"
+                            className="flex items-center gap-1 px-2.5 sm:px-3 h-7 text-[10px] uppercase tracking-wider font-semibold text-obsidian/75 hover:text-obsidian bg-obsidian/10 hover:bg-obsidian/15 active:scale-[0.98] transition-all cursor-pointer"
+                            style={{ borderRadius: "800px" }}
+                            aria-label="Close dialog"
+                          />
+                        }
+                      >
+                        <X className="size-3" />
+                        <span>Close</span>
+                      </DialogClose>
+                    </div>
                   </div>
 
-                  <a
-                    href={`${portfolioData.socials.whatsapp}?text=Hi%20Shahan,%20I'd%20love%20a%20cut%20like%20"${encodeURIComponent(selectedProject.title)}"`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-1.5 px-3.5 h-7 text-[10px] uppercase tracking-wider font-semibold text-obsidian bg-ember hover:bg-ember/90 active:scale-[0.98] transition-all shrink-0"
-                    style={{ borderRadius: "800px" }}
+                  {/* Full Description */}
+                  <DialogDescription className="text-xs sm:text-sm text-obsidian/65 leading-relaxed font-sans">
+                    {selectedProject.description}
+                  </DialogDescription>
+
+                  {/* Role & Pipeline compact badge */}
+                  <div
+                    className="flex flex-wrap items-center justify-between gap-1 px-2.5 py-1 text-[10px] font-mono text-obsidian/75"
+                    style={{
+                      background: "#e8e7e3",
+                      borderRadius: "10px",
+                    }}
                   >
-                    <MessageCircle className="size-3" />
-                    <span>Commission</span>
-                  </a>
-                </div>
+                    <span>Role: <strong className="text-obsidian">{selectedProject.role}</strong></span>
+                    <span className="text-obsidian/60">DaVinci · Premiere Pro</span>
+                  </div>
 
-                {/* Description */}
-                <DialogDescription className="text-xs text-obsidian/65 leading-relaxed font-sans line-clamp-2">
-                  {selectedProject.description}
-                </DialogDescription>
-
-                {/* Role & Pipeline compact badge */}
-                <div
-                  className="flex flex-wrap items-center justify-between gap-1 px-2.5 py-1 text-[10px] font-mono text-obsidian/75"
-                  style={{
-                    background: "#e8e7e3",
-                    borderRadius: "10px",
-                  }}
-                >
-                  <span>Role: <strong className="text-obsidian">{selectedProject.role}</strong></span>
-                  <span className="text-obsidian/60">DaVinci · Premiere Pro</span>
-                </div>
-
-                {/* Tags row */}
-                <div className="flex flex-wrap gap-1 pt-0.5">
-                  {selectedProject.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-2 py-0.5 text-[9px] font-mono uppercase text-obsidian/80 font-medium"
-                      style={{
-                        background: "#f5f28e",
-                        borderRadius: "800px",
-                      }}
-                    >
-                      {tag}
-                    </span>
-                  ))}
+                  {/* Tags row */}
+                  <div className="flex flex-wrap gap-1 pt-0.5">
+                    {selectedProject.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="px-2 py-0.5 text-[9px] font-mono uppercase text-obsidian/80 font-medium"
+                        style={{
+                          background: "#f5f28e",
+                          borderRadius: "800px",
+                        }}
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
             </DialogContent>
@@ -233,7 +275,7 @@ function ProjectCard({
 
   const handleMouseEnter = () => {
     if (videoRef.current) {
-      videoRef.current.play().catch(() => {});
+      videoRef.current.play().catch(() => { });
     }
   };
 
@@ -265,7 +307,7 @@ function ProjectCard({
     >
       {/* Thumbnail */}
       <div
-        className={`relative aspect-video w-full overflow-hidden bg-gradient-to-tr ${project.posterGradient}`}
+        className={`relative aspect-video w-full overflow-hidden bg-linear-to-tr ${project.posterGradient}`}
       >
         {/* Real video preview */}
         <video
